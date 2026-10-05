@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# Xcode: per-user state (differs on every machine, causes pointless conflicts)
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# Build output
+build/
+DerivedData/
+
+# Swift Package Manager: local build folders only.
+# Package.resolved (xcshareddata/swiftpm/) IS committed so everyone gets the same pinned versions.
+.build/
+.swiftpm/
+
+# Models are downloaded by the app at runtime; never commit weights
+*.litertlm
+*.gguf
