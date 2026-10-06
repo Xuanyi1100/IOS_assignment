@@ -110,10 +110,18 @@ final class ChatViewController: UIViewController, UITextFieldDelegate {
                 try await engine.prepare { [weak textView = responseTextView] message in
                     DispatchQueue.main.async { textView?.text = message }
                 }
-                responseTextView.text = ""
+                // Models that reason first (or just prefill a long prompt) produce no visible text for
+                // a while; show a hint instead of a blank screen that looks frozen.
+                responseTextView.text = NSLocalizedString("chat.thinking", value: "Thinking…",
+                                                          comment: "Shown while waiting for the first word of the reply")
 
                 if streaming {
+                    var receivedFirstPiece = false
                     for try await piece in engine.stream(prompt: prompt) {
+                        if !receivedFirstPiece {
+                            receivedFirstPiece = true
+                            responseTextView.text = ""   // replace the hint with the real reply
+                        }
                         responseTextView.text += piece
                         // Real models stream tokens, not words, so count words in the text.
                         let words = responseTextView.text.split(whereSeparator: { $0.isWhitespace }).count

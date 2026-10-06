@@ -50,7 +50,21 @@ actor LiteRTEngine: InferenceEngine {
                     // Qwen3 soft switch: asks the model to skip its "thinking" phase. It may still
                     // emit an empty <think></think> pair, so the filter below stays as a safety net.
                     var filter = ThinkTagFilter()
-                    for try await piece in chat.stream(trimmed) {
+                    #if DEBUG
+                    let started = Date()
+                    var pieceCount = 0
+                    #endif
+                    // Qwen3 soft switch: asks the model to skip its reasoning phase, which otherwise
+                    // costs 9-14 s before the first visible word. The engine-level thinking flag has
+                    // no effect on this model build, so the filter below remains as a safety net.
+                    for try await piece in chat.stream(trimmed + " /no_think") {
+                        #if DEBUG
+                        // Debug builds only: raw model output (escaped, so whitespace is visible) for
+                        // diagnosing bad generations from the Xcode console.
+                        pieceCount += 1
+                        print(String(format: "[LiteRT] +%.2fs piece %d: %@", Date().timeIntervalSince(started),
+                                     pieceCount, piece.debugDescription))
+                        #endif
                         let visible = filter.feed(piece)
                         if !visible.isEmpty { continuation.yield(visible) }
                     }
